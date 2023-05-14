@@ -159,4 +159,8 @@ app.put('/accomodations/:id', async (req, res) => {
   })
 })
 
+app.get('/get-accomodations-for-all-users', async (req, res) => {
+  res.json( await Accomodation.find())
+})
+
 app.listen(4000)
