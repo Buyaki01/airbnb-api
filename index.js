@@ -134,12 +134,12 @@ app.get('/accomodations', (req, res) => {
   })
 })
 
-app.get('/accomodations/:id', async (req, res) => {
+app.get('/accomodation/:id', async (req, res) => {
   const {id} = req.params
   res.json( await Accomodation.findById(id))
 })
 
-app.put('/accomodations/:id', async (req, res) => {
+app.put('/accomodation/:id', async (req, res) => {
   const {token} = req.cookies
   const {id} = req.params
   const {title, address, photos:addPhoto, 
