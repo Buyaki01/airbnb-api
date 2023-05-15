@@ -164,7 +164,7 @@ app.get('/get-accomodations-for-all-users', async (req, res) => {
   res.json( await Accomodation.find())
 })
 
-app.post('/booking', async (req, res) => {
+app.post('/bookings', async (req, res) => {
   const {accomodationId, checkIn, checkOut, noOfGuests, name, mobileNumber, price,} = req.body
   const bookingDoc = await Booking.create({
     accomodationId, checkIn, checkOut, noOfGuests, name, mobileNumber, price,
