@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 const User = require('./models/User')
 const Accomodation = require('./models/Accomodation')
+const Booking = require('./models/Booking')
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
 const downloadImage = require('image-downloader')
@@ -161,6 +162,14 @@ app.put('/accomodation/:id', async (req, res) => {
 
 app.get('/get-accomodations-for-all-users', async (req, res) => {
   res.json( await Accomodation.find())
+})
+
+app.post('/booking', async (req, res) => {
+  const {accomodationId, checkIn, checkOut, noOfGuests, name, mobileNumber, price,} = req.body
+  const bookingDoc = await Booking.create({
+    accomodationId, checkIn, checkOut, noOfGuests, name, mobileNumber, price,
+  })
+  res.json(bookingDoc)
 })
 
 app.listen(4000)
