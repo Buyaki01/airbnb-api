@@ -28,10 +28,6 @@ app.use(cors({
 
 mongoose.connect(process.env.MONGO_URL)
 
-app.get('/test', (req, res) => {
-  res.json('test ok')
-})
-
 app.post('/register', async (req, res) => {
   const {name, email, password} = req.body
 
@@ -165,11 +161,28 @@ app.get('/get-accomodations-for-all-users', async (req, res) => {
 })
 
 app.post('/bookings', async (req, res) => {
-  const {accomodationId, checkIn, checkOut, noOfGuests, name, mobileNumber, price,} = req.body
-  const bookingDoc = await Booking.create({
-    accomodationId, checkIn, checkOut, noOfGuests, name, mobileNumber, price,
+  const {token} = req.cookies
+  const {accomodationId, checkIn, 
+    checkOut, noOfGuests, name, 
+    mobileNumber, price} = req.body
+  jwt.verify(token, process.env.SECRET_KEY, {}, async(err, cookieData) => {
+    if (err) throw err
+    const bookingDoc = await Booking.create({
+      userId:cookieData.id,
+      accomodationId, checkIn, 
+    checkOut, noOfGuests, name, 
+    mobileNumber, price
+    })
+    res.json(bookingDoc)
   })
-  res.json(bookingDoc)
+})
+
+app.get('/bookings', async (req, res) => {
+  const {token} = req.cookies
+  jwt.verify(token, process.env.SECRET_KEY, {}, async(err, cookieData) => {
+    const {id} = cookieData
+    res.json(await Booking.find({userId:id}))
+  })
 })
 
 app.listen(4000)
