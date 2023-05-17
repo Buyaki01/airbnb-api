@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 const User = require('./models/User')
 const Accomodation = require('./models/Accomodation')
+const Booking = require('./models/Booking')
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
 const downloadImage = require('image-downloader')
@@ -26,10 +27,6 @@ app.use(cors({
 }))
 
 mongoose.connect(process.env.MONGO_URL)
-
-app.get('/test', (req, res) => {
-  res.json('test ok')
-})
 
 app.post('/register', async (req, res) => {
   const {name, email, password} = req.body
@@ -134,12 +131,12 @@ app.get('/accomodations', (req, res) => {
   })
 })
 
-app.get('/accomodations/:id', async (req, res) => {
+app.get('/accomodation/:id', async (req, res) => {
   const {id} = req.params
   res.json( await Accomodation.findById(id))
 })
 
-app.put('/accomodations/:id', async (req, res) => {
+app.put('/accomodation/:id', async (req, res) => {
   const {token} = req.cookies
   const {id} = req.params
   const {title, address, photos:addPhoto, 
@@ -156,6 +153,35 @@ app.put('/accomodations/:id', async (req, res) => {
       await accomodationDoc.save()
       res.json('ok')
     }
+  })
+})
+
+app.get('/get-accomodations-for-all-users', async (req, res) => {
+  res.json( await Accomodation.find())
+})
+
+app.post('/bookings', async (req, res) => {
+  const {token} = req.cookies
+  const {accomodationId, checkIn, 
+    checkOut, noOfGuests, name, 
+    mobileNumber, price} = req.body
+  jwt.verify(token, process.env.SECRET_KEY, {}, async(err, cookieData) => {
+    if (err) throw err
+    const bookingDoc = await Booking.create({
+      userId:cookieData.id,
+      accomodationId, checkIn, 
+    checkOut, noOfGuests, name, 
+    mobileNumber, price
+    })
+    res.json(bookingDoc)
+  })
+})
+
+app.get('/bookings', async (req, res) => {
+  const {token} = req.cookies
+  jwt.verify(token, process.env.SECRET_KEY, {}, async(err, cookieData) => {
+    const {id} = cookieData
+    res.json(await Booking.find({userId:id}).populate('accomodationId'))
   })
 })
 
