@@ -23,7 +23,7 @@ app.use(cookieParser())
 app.use('/images', express.static(__dirname+'/images'))
 app.use(cors({
   credentials: true,
-  origin: 'http://localhost:5173'
+  origin: ['http://localhost:5173', 'https://delicate-quokka-3d0637.netlify.app']
 }))
 
 mongoose.connect(process.env.MONGO_URL)
