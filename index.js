@@ -181,7 +181,7 @@ app.get('/bookings', async (req, res) => {
   const {token} = req.cookies
   jwt.verify(token, process.env.SECRET_KEY, {}, async(err, cookieData) => {
     const {id} = cookieData
-    res.json(await Booking.find({userId:id}))
+    res.json(await Booking.find({userId:id}).populate('accomodationId'))
   })
 })
 
