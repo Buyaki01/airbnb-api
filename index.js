@@ -21,10 +21,16 @@ const bcryptSalt = bcrypt.genSaltSync(10)
 app.use(express.json())
 app.use(cookieParser())
 app.use('/images', express.static(__dirname+'/images'))
-app.use(cors({
-  credentials: true,
-  origin: ['https://delicate-quokka-3d0637.netlify.app']
-}))
+
+app.use(cors({ origin: true }));
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
 
 mongoose.connect(process.env.MONGO_URL)
 
