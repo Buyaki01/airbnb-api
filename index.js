@@ -10,9 +10,7 @@ const cookieParser = require('cookie-parser')
 const downloadImage = require('image-downloader')
 const multer = require('multer')
 const path = require('path')
-
 const fs = require('fs')
-
 require('dotenv').config()
 const app = express()
 
@@ -22,7 +20,7 @@ app.use(express.json())
 app.use(cookieParser())
 app.use('/images', express.static(__dirname+'/images'))
 
-app.use(cors({ origin: true }));
+app.use(cors());
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
