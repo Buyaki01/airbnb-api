@@ -1,4 +1,5 @@
 const express = require('express')
+const app = express()
 const cors = require('cors')
 const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
@@ -12,7 +13,8 @@ const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
 require('dotenv').config()
-const app = express()
+const allowedOrigins = require('../config/allowedOrigins')
+const corsOptions = require('./config/corsOptions')
 
 const bcryptSalt = bcrypt.genSaltSync(10)
 
@@ -20,15 +22,16 @@ app.use(express.json())
 app.use(cookieParser())
 app.use('/images', express.static(__dirname+'/images'))
 
-app.use(cors());
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
+const credentials = (req, res, next) => {
+  const origin = req.headers.origin
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Credentials', true)
+  }
+  next()
+}
+
+app.use(cors(corsOptions));
+app.use(credentials)
 
 mongoose.connect(process.env.MONGO_URL)
 
