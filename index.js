@@ -33,19 +33,11 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  credentials: true, 
 }
 
-const credentials = (req, res, next) => {
-  const origin = req.headers.origin
-  if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Credentials', true)
-  }
-  next()
-}
-
-app.use(cors(corsOptions));
-app.use(credentials)
+app.use(cors(corsOptions))
 
 mongoose.connect(process.env.MONGO_URL)
 
@@ -199,10 +191,11 @@ app.post('/bookings', async (req, res) => {
 })
 
 app.get('/bookings', async (req, res) => {
-  const {token} = req.cookies
-  jwt.verify(token, process.env.SECRET_KEY, {}, async(err, cookieData) => {
-    const {id} = cookieData
-    res.json(await Booking.find({userId:id}).populate('accomodationId'))
+  const { token } = req.cookies
+  jwt.verify(token, process.env.SECRET_KEY, {}, async (err, cookieData) => {
+    const { id } = cookieData
+    const bookings = await Booking.find({ userId: id }).populate('accomodationId')
+    res.json(bookings);
   })
 })
 
