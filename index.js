@@ -20,10 +20,24 @@ app.use(express.json())
 app.use(cookieParser())
 app.use('/images', express.static(__dirname+'/images'))
 
-app.use(cors({
-    credentials: true,
-    origin: '*',
-}))
+const allowedOrigins = [
+  'https://www.yoursite.com', 
+  'http://127.0.0.1:5500', 
+  'http://localhost:3500'
+]
+
+const corsOptions = {
+  credentials: true,
+  origin: function(origin, callback) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  }
+}
+
+app.use(cors(corsOptions))
 
 mongoose.connect(process.env.MONGO_URL)
 
