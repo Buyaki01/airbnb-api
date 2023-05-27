@@ -13,14 +13,28 @@ const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
 require('dotenv').config()
-const allowedOrigins = require('../config/allowedOrigins')
-const corsOptions = require('./config/corsOptions')
 
 const bcryptSalt = bcrypt.genSaltSync(10)
 
 app.use(express.json())
 app.use(cookieParser())
 app.use('/images', express.static(__dirname+'/images'))
+
+const allowedOrigins = [
+  'https://delicate-quokka-3d0637.netlify.app/',
+  'http://localhost:5173/'
+]
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  optionsSuccessStatus: 200
+}
 
 const credentials = (req, res, next) => {
   const origin = req.headers.origin
