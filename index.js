@@ -21,9 +21,8 @@ app.use(cookieParser())
 app.use('/images', express.static(__dirname+'/images'))
 
 const allowedOrigins = [
-  'https://www.yoursite.com', 
-  'http://127.0.0.1:5500', 
-  'http://localhost:3500'
+  'https://delicate-quokka-3d0637.netlify.app', 
+  'http://localhost:5173/'
 ]
 
 const corsOptions = {
