@@ -20,24 +20,9 @@ app.use(express.json())
 app.use(cookieParser())
 app.use('/images', express.static(__dirname+'/images'))
 
-const allowedOrigins = [
-  'https://delicate-quokka-3d0637.netlify.app/',
-  'http://localhost:5173/'
-]
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  optionsSuccessStatus: 200,
-  credentials: true, 
-}
-
-app.use(cors(corsOptions))
+app.use(cors({
+  origin: 'https://delicate-quokka-3d0637.netlify.app/',
+}))
 
 mongoose.connect(process.env.MONGO_URL)
 
