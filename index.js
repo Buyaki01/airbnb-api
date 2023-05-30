@@ -15,12 +15,10 @@ const fs = require('fs')
 require('dotenv').config()
 
 const bcryptSalt = bcrypt.genSaltSync(10)
-
+app.use(cors())
 app.use(express.json())
 app.use(cookieParser())
 app.use('/images', express.static(__dirname+'/images'))
-
-app.use(cors())
 
 // app.use(function (req, res, next) {
 //   res.setHeader('Access-Control-Allow-Origin', 'https://delicate-quokka-3d0637.netlify.app');
