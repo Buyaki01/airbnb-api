@@ -20,19 +20,19 @@ app.use(express.json())
 app.use(cookieParser())
 app.use('/images', express.static(__dirname+'/images'))
 
-app.use(cors({ origin: 'https://delicate-quokka-3d0637.netlify.app' }))
+app.use(cors())
 
-app.use(function (req, res, next) {
-  res.setHeader('Access-Control-Allow-Origin', 'https://delicate-quokka-3d0637.netlify.app');
+// app.use(function (req, res, next) {
+//   res.setHeader('Access-Control-Allow-Origin', 'https://delicate-quokka-3d0637.netlify.app');
 
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+//   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
 
-  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+//   res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
 
-  res.setHeader('Access-Control-Allow-Credentials', true);
+//   res.setHeader('Access-Control-Allow-Credentials', true);
 
-  next();
-});
+//   next();
+// });
 
 mongoose.connect(process.env.MONGO_URL)
 
