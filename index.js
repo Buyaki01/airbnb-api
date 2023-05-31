@@ -11,26 +11,43 @@ const cookieParser = require('cookie-parser')
 const downloadImage = require('image-downloader')
 const multer = require('multer')
 const path = require('path')
+const PORT = process.env.PORT || 3000 
 const fs = require('fs')
 require('dotenv').config()
 
 const bcryptSalt = bcrypt.genSaltSync(10)
-app.use(cors())
+
+const allowedOrigins = [
+  'http://localhost:5173', 
+  'https://delicate-quokka-3d0637.netlify.app'
+]
+
+const credentials = (req, res, next) => {
+  const origin = req.headers.origin
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Credentials', true)
+  }
+  next()
+}
+
+app.use(credentials)
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if(allowedOrigins.indexOf(origin !== -1 || !origin)){
+      callback(null, true)
+    }else{
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
+  optionsSuccessStatus: 200
+}
+
+app.use(cors(corsOptions))
+app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 app.use(cookieParser())
 app.use('/images', express.static(__dirname+'/images'))
-
-// app.use(function (req, res, next) {
-//   res.setHeader('Access-Control-Allow-Origin', 'https://delicate-quokka-3d0637.netlify.app');
-
-//   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-
-//   res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-
-//   res.setHeader('Access-Control-Allow-Credentials', true);
-
-//   next();
-// });
 
 mongoose.connect(process.env.MONGO_URL)
 
@@ -184,12 +201,11 @@ app.post('/bookings', async (req, res) => {
 })
 
 app.get('/bookings', async (req, res) => {
-  const { token } = req.cookies
-  jwt.verify(token, process.env.SECRET_KEY, {}, async (err, cookieData) => {
-    const { id } = cookieData
-    const bookings = await Booking.find({ userId: id }).populate('accomodationId')
-    res.json(bookings);
+  const {token} = req.cookies
+  jwt.verify(token, process.env.SECRET_KEY, {}, async(err, cookieData) => {
+    const {id} = cookieData
+    res.json(await Booking.find({userId:id}).populate('accomodationId'))
   })
 })
 
-app.listen(4000)
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
