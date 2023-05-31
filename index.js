@@ -84,16 +84,6 @@ app.post('/login', async (req, res) => {
   }
 })
 
-const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization || req.headers.Authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer')) {
-    return res.sendStatus(401)
-  }
-  next()
-}
-
-app.use(authMiddleware)
-
 app.get('/profile', (req, res) => {
   const {token} = req.cookies
   if (token) {
@@ -111,6 +101,35 @@ app.get('/profile', (req, res) => {
 app.post('/logout', (req, res) => {
   res.cookie('token', '').json(true)
 })
+
+app.get('/get-accomodations-for-all-users', async (req, res) => {
+  res.json( await Accomodation.find())
+})
+
+app.get('/accomodation/:id', async (req, res) => {
+  const {id} = req.params
+  res.json( await Accomodation.findById(id))
+})
+
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer')) {
+    return res.sendStatus(401);
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+  
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.sendStatus(401);
+  }
+}
+
+app.use(authMiddleware)
 
 app.post('/upload-photo-link', async (req, res) => {
   const {photoLink} = req.body
@@ -137,7 +156,7 @@ app.post('/upload-photo', upload.array('file', 100), async (req, res) => {
   res.json(uploadedFiles)
 })
 
-app.post('/accomodations', (req, res) => {
+app.post('/accomodations', authMiddleware, (req, res) => {
   const {token} = req.cookies
   const {title, address, photos:addPhoto, 
     description, features, 
@@ -156,7 +175,7 @@ app.post('/accomodations', (req, res) => {
   }
 })
 
-app.get('/accomodations', (req, res) => {
+app.get('/accomodations', authMiddleware, (req, res) => {
   const {token} = req.cookies
   jwt.verify(token, process.env.SECRET_KEY, {}, async(err, cookieData) => {
     const {id} = cookieData
@@ -164,12 +183,7 @@ app.get('/accomodations', (req, res) => {
   })
 })
 
-app.get('/accomodation/:id', async (req, res) => {
-  const {id} = req.params
-  res.json( await Accomodation.findById(id))
-})
-
-app.put('/accomodation/:id', async (req, res) => {
+app.put('/accomodation/:id', authMiddleware, async (req, res) => {
   const {token} = req.cookies
   const {id} = req.params
   const {title, address, photos:addPhoto, 
@@ -189,11 +203,7 @@ app.put('/accomodation/:id', async (req, res) => {
   })
 })
 
-app.get('/get-accomodations-for-all-users', async (req, res) => {
-  res.json( await Accomodation.find())
-})
-
-app.post('/bookings', async (req, res) => {
+app.post('/bookings', authMiddleware, async (req, res) => {
   const {token} = req.cookies
   const {accomodationId, checkIn, 
     checkOut, noOfGuests, name, 
@@ -210,7 +220,7 @@ app.post('/bookings', async (req, res) => {
   })
 })
 
-app.get('/bookings', async (req, res) => {
+app.get('/bookings', authMiddleware, async (req, res) => {
   const {token} = req.cookies
   jwt.verify(token, process.env.SECRET_KEY, {}, async(err, cookieData) => {
     const {id} = cookieData
