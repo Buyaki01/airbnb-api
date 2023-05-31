@@ -84,6 +84,16 @@ app.post('/login', async (req, res) => {
   }
 })
 
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer')) {
+    return res.sendStatus(401)
+  }
+  next()
+}
+
+app.use(authMiddleware)
+
 app.get('/profile', (req, res) => {
   const {token} = req.cookies
   if (token) {
