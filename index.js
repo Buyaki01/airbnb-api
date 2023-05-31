@@ -13,6 +13,7 @@ const multer = require('multer')
 const path = require('path')
 const PORT = process.env.PORT || 3000 
 const fs = require('fs')
+const authMiddleware = require('./middleware/authMiddleware')
 require('dotenv').config()
 
 const bcryptSalt = bcrypt.genSaltSync(10)
@@ -67,33 +68,36 @@ app.post('/register', async (req, res) => {
 })
 
 app.post('/login', async (req, res) => {
-  const {email, password} = req.body
-  const userDoc = await User.findOne({email})
+  const { email, password } = req.body;
+  const userDoc = await User.findOne({ email });
+  
   if (userDoc) {
     const passOk = bcrypt.compareSync(password, userDoc.password)
     if (passOk) {
-      jwt.sign({email:userDoc.email, id:userDoc._id}, process.env.SECRET_KEY, {}, (err, token) => {
+      jwt.sign({ email: userDoc.email, id: userDoc._id }, process.env.SECRET_KEY, { expiresIn: '1d' }, (err, token) => {
         if (err) throw err
-        res.cookie('token', token).json(userDoc)
+        res.cookie('token', token).json({ user: userDoc, token: token })
       })
-    }else{
+    } else {
       res.status(422).json('pass not ok')
     }
-  }else{
+  } else {
     res.json('Not found')
   }
 })
 
 app.get('/profile', (req, res) => {
-  const {token} = req.cookies
+  const { token } = req.cookies
   if (token) {
-    jwt.verify(token, process.env.SECRET_KEY, {}, async(err, cookieData) => {
-      if (err) throw err
-      const {name, email, id} = await User.findById(cookieData.id)
-      
-      res.json({name, email, id})
-    })
-  }else{
+    jwt.verify(token, process.env.SECRET_KEY, async (err, cookieData) => {
+      if (err) {
+        res.status(401).json({ message: 'Invalid or expired token' })
+      } else {
+        const { name, email, id } = await User.findById(cookieData.id)
+        res.json({ name, email, id })
+      }
+    });
+  } else {
     res.json(null)
   }
 })
@@ -110,26 +114,6 @@ app.get('/accomodation/:id', async (req, res) => {
   const {id} = req.params
   res.json( await Accomodation.findById(id))
 })
-
-const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization || req.headers.Authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer')) {
-    return res.sendStatus(401);
-  }
-
-  const token = authHeader.replace('Bearer ', '');
-  
-  try {
-    const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    return res.sendStatus(401);
-  }
-}
-
-app.use(authMiddleware)
 
 app.post('/upload-photo-link', async (req, res) => {
   const {photoLink} = req.body
@@ -221,11 +205,15 @@ app.post('/bookings', authMiddleware, async (req, res) => {
 })
 
 app.get('/bookings', authMiddleware, async (req, res) => {
-  const {token} = req.cookies
-  jwt.verify(token, process.env.SECRET_KEY, {}, async(err, cookieData) => {
-    const {id} = cookieData
-    res.json(await Booking.find({userId:id}).populate('accomodationId'))
-  })
+  try {
+    const token = req.headers.authorization.split(' ')[1]
+    const decodedToken = jwt.verify(token, SECRET_KEY);
+    const userId = decodedToken.id
+    const bookings = await Booking.find({userId:userId}).populate('accomodationId')
+    res.status(200).json(bookings)
+  } catch (error) {
+    res.status(401).json({ message: 'Invalid token' })
+  }
 })
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
