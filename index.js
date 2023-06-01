@@ -75,7 +75,6 @@ app.post('/login', async (req, res) => {
     if (passOk) {
       jwt.sign({ email: userDoc.email, id: userDoc._id }, process.env.SECRET_KEY, { expiresIn: '1d' }, (err, token) => {
         if (err) throw err
-        // console.log('Token:', token)
         res.cookie('token', token).json({ user: userDoc, token: token })
       })
     } else {
@@ -118,13 +117,28 @@ app.get('/accomodation/:id', async (req, res) => {
 app.get('/bookings', async (req, res) => {
   try {
     const token = req.headers.authorization.split(' ')[1]
-    const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
-    console.log(decodedToken)
+    const decodedToken = jwt.verify(token, process.env.SECRET_KEY)
     const userId = decodedToken.id
     const bookings = await Booking.find({userId:userId}).populate('accomodationId')
     res.status(200).json(bookings)
   } catch (error) {
     res.status(401).json({ message: 'Invalid token' })
+  }
+})
+
+app.get('/bookings/:id', async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1];
+    const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
+    const userId = decodedToken.id;
+    const booking = await Booking.findOne({ _id: req.params.id, userId: userId }).populate('accomodationId');
+    if (booking) {
+      res.status(200).json(booking);
+    } else {
+      res.status(404).json({ message: 'Booking not found' });
+    }
+  } catch (error) {
+    res.status(401).json({ message: 'Invalid token' });
   }
 })
 
