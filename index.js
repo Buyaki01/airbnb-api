@@ -13,7 +13,6 @@ const multer = require('multer')
 const path = require('path')
 const PORT = process.env.PORT || 3000 
 const fs = require('fs')
-const authMiddleware = require('./middleware/authMiddleware')
 require('dotenv').config()
 
 const bcryptSalt = bcrypt.genSaltSync(10)
@@ -76,6 +75,7 @@ app.post('/login', async (req, res) => {
     if (passOk) {
       jwt.sign({ email: userDoc.email, id: userDoc._id }, process.env.SECRET_KEY, { expiresIn: '1d' }, (err, token) => {
         if (err) throw err
+        // console.log('Token:', token)
         res.cookie('token', token).json({ user: userDoc, token: token })
       })
     } else {
@@ -115,6 +115,19 @@ app.get('/accomodation/:id', async (req, res) => {
   res.json( await Accomodation.findById(id))
 })
 
+app.get('/bookings', async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1]
+    const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
+    console.log(decodedToken)
+    const userId = decodedToken.id
+    const bookings = await Booking.find({userId:userId}).populate('accomodationId')
+    res.status(200).json(bookings)
+  } catch (error) {
+    res.status(401).json({ message: 'Invalid token' })
+  }
+})
+
 app.post('/upload-photo-link', async (req, res) => {
   const {photoLink} = req.body
   const newName = 'photo' + Date.now() + '.jpg'
@@ -140,7 +153,7 @@ app.post('/upload-photo', upload.array('file', 100), async (req, res) => {
   res.json(uploadedFiles)
 })
 
-app.post('/accomodations', authMiddleware, (req, res) => {
+app.post('/accomodations', (req, res) => {
   const {token} = req.cookies
   const {title, address, photos:addPhoto, 
     description, features, 
@@ -159,7 +172,7 @@ app.post('/accomodations', authMiddleware, (req, res) => {
   }
 })
 
-app.get('/accomodations', authMiddleware, (req, res) => {
+app.get('/accomodations', (req, res) => {
   const {token} = req.cookies
   jwt.verify(token, process.env.SECRET_KEY, {}, async(err, cookieData) => {
     const {id} = cookieData
@@ -167,7 +180,7 @@ app.get('/accomodations', authMiddleware, (req, res) => {
   })
 })
 
-app.put('/accomodation/:id', authMiddleware, async (req, res) => {
+app.put('/accomodation/:id', async (req, res) => {
   const {token} = req.cookies
   const {id} = req.params
   const {title, address, photos:addPhoto, 
@@ -187,7 +200,7 @@ app.put('/accomodation/:id', authMiddleware, async (req, res) => {
   })
 })
 
-app.post('/bookings', authMiddleware, async (req, res) => {
+app.post('/bookings', async (req, res) => {
   const {token} = req.cookies
   const {accomodationId, checkIn, 
     checkOut, noOfGuests, name, 
@@ -202,18 +215,6 @@ app.post('/bookings', authMiddleware, async (req, res) => {
     })
     res.json(bookingDoc)
   })
-})
-
-app.get('/bookings', authMiddleware, async (req, res) => {
-  try {
-    const token = req.headers.authorization.split(' ')[1]
-    const decodedToken = jwt.verify(token, SECRET_KEY);
-    const userId = decodedToken.id
-    const bookings = await Booking.find({userId:userId}).populate('accomodationId')
-    res.status(200).json(bookings)
-  } catch (error) {
-    res.status(401).json({ message: 'Invalid token' })
-  }
 })
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
