@@ -14,7 +14,6 @@ const path = require('path')
 const PORT = process.env.PORT || 3000 
 const fs = require('fs')
 require('dotenv').config()
-
 const bcryptSalt = bcrypt.genSaltSync(10)
 app.use(cookieParser())
 app.use(express.urlencoded({ extended: false }))
@@ -41,6 +40,7 @@ app.options('*', cors(corsOptions))
 
 app.post('/register', async (req, res) => {
   const {name, email, password} = req.body
+
   try{ 
     const userDoc = await User.create({
       name,
@@ -55,17 +55,35 @@ app.post('/register', async (req, res) => {
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  const userDoc = await User.findOne({ email })
+  const userDoc = await User.findOne({ email });
   if (userDoc) {
-    const passOk = bcrypt.compareSync(password, userDoc.password);
+    const passOk = bcrypt.compareSync(password, userDoc.password)
     if (passOk) {
-      jwt.sign({ email: userDoc.email, id: userDoc._id }, process.env.SECRET_KEY, { expiresIn: '1d' }, (err, token) => {
-        if (err) throw err;
-        res.cookie('token', token, { 
-          sameSite: 'none',
-          secure: true,
-        }).json({ user: userDoc, token: token })
-      });
+      jwt.sign(
+        { email: userDoc.email, id: userDoc._id }, 
+        process.env.SECRET_KEY, 
+        { expiresIn: '15min' }, 
+        (err, token) => {
+          if (err) throw err
+          res.cookie('token', token).json({ user: userDoc, token: token })
+        }
+      )
+
+      jwt.sign(
+        { email: userDoc.email, id: userDoc._id }, 
+        process.env.REFRESH_TOKEN_SECRET, 
+        { expiresIn: '1d' }, 
+        (err, refreshToken) => {
+          if (err) throw err
+          userDoc.refreshToken = refreshToken
+          userDoc.save()
+          res.cookie('refreshToken', refreshToken).json({ user: userDoc, token: refreshToken })
+        }
+      )
+      User.find({ _id: { $ne: userDoc._id } }, (err, otherUsers) => {
+        if (err) throw err
+        console.log(otherUsers)
+      })
     } else {
       res.status(422).json('pass not ok')
     }
