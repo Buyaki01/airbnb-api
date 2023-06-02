@@ -16,6 +16,12 @@ const fs = require('fs')
 require('dotenv').config()
 
 const bcryptSalt = bcrypt.genSaltSync(10)
+app.use(cookieParser())
+app.use(express.urlencoded({ extended: false }))
+app.use(express.json())
+app.use('/images', express.static(__dirname+'/images'))
+
+mongoose.connect(process.env.MONGO_URL)
 
 const allowedOrigins = ['https://delicate-quokka-3d0637.netlify.app']
 
@@ -42,12 +48,6 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions))
-app.use(express.urlencoded({ extended: false }))
-app.use(express.json())
-app.use(cookieParser())
-app.use('/images', express.static(__dirname+'/images'))
-
-mongoose.connect(process.env.MONGO_URL)
 
 app.post('/register', async (req, res) => {
   const {name, email, password} = req.body
