@@ -14,6 +14,7 @@ const path = require('path')
 const PORT = process.env.PORT || 3000 
 const fs = require('fs')
 require('dotenv').config()
+const cookie = require('cookie')
 
 const bcryptSalt = bcrypt.genSaltSync(10)
 app.use(cookieParser())
@@ -69,7 +70,17 @@ app.post('/login', async (req, res) => {
     if (passOk) {
       jwt.sign({ email: userDoc.email, id: userDoc._id }, process.env.SECRET_KEY, { expiresIn: '1d' }, (err, token) => {
         if (err) throw err
-        res.cookie('token', token, { sameSite: 'none', secure: true }).json({ user: userDoc, token: token })
+        
+        const cookieOptions = {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'none',
+        };
+        
+        const tokenCookie = cookie.serialize('token', token, cookieOptions);
+        res.setHeader('Set-Cookie', tokenCookie);
+        
+        res.json({ user: userDoc, token: token });
       })
     } else {
       res.status(422).json('pass not ok')
