@@ -20,7 +20,7 @@ app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 app.use('/images', express.static(__dirname + '/images'))
 mongoose.connect(process.env.MONGO_URL)
-const allowedOrigins = ['https://delicate-quokka-3d0637.netlify.app']
+const allowedOrigins = ['http://localhost:5173']
 const credentials = (req, res, next) => {
   const origin = req.headers.origin
   if (allowedOrigins.includes(origin)) {
@@ -53,42 +53,40 @@ app.post('/register', async (req, res) => {
   }
 })
 
+const generateAccessToken = (userDoc) => {
+  return jwt.sign(
+    { email: userDoc.email, id: userDoc._id },
+    process.env.SECRET_KEY,
+    { expiresIn: '15min' }
+  )
+}
+
+const generateRefreshToken = async (userDoc) => {
+  const refreshToken = jwt.sign(
+    { email: userDoc.email, id: userDoc._id },
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: '1d' }
+  )
+  userDoc.refreshToken = refreshToken
+  await userDoc.save()
+  return refreshToken
+}
+
 app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  const userDoc = await User.findOne({ email });
+  const { email, password } = req.body
+  const userDoc = await User.findOne({ email })
   if (userDoc) {
     const passOk = bcrypt.compareSync(password, userDoc.password)
     if (passOk) {
-      jwt.sign(
-        { email: userDoc.email, id: userDoc._id }, 
-        process.env.SECRET_KEY, 
-        { expiresIn: '15min' }, 
-        (err, token) => {
-          if (err) throw err
-          res.cookie('token', token).json({ user: userDoc, token: token })
-        }
-      )
-
-      jwt.sign(
-        { email: userDoc.email, id: userDoc._id }, 
-        process.env.REFRESH_TOKEN_SECRET, 
-        { expiresIn: '1d' }, 
-        (err, refreshToken) => {
-          if (err) throw err
-          userDoc.refreshToken = refreshToken
-          userDoc.save()
-          res.cookie('refreshToken', refreshToken).json({ user: userDoc, token: refreshToken })
-        }
-      )
-      User.find({ _id: { $ne: userDoc._id } }, (err, otherUsers) => {
-        if (err) throw err
-        console.log(otherUsers)
-      })
+      const accessToken = generateAccessToken(userDoc)
+      const refreshToken = await generateRefreshToken(userDoc)
+      res.cookie('refreshToken', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 })
+      res.json({ accessToken })
     } else {
       res.status(422).json('pass not ok')
     }
   } else {
-    res.json('Not found')
+    res.json('Not found');
   }
 })
 
