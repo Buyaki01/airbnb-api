@@ -14,18 +14,14 @@ const path = require('path')
 const PORT = process.env.PORT || 3000 
 const fs = require('fs')
 require('dotenv').config()
-const cookie = require('cookie')
 
 const bcryptSalt = bcrypt.genSaltSync(10)
 app.use(cookieParser())
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 app.use('/images', express.static(__dirname + '/images'))
-
 mongoose.connect(process.env.MONGO_URL)
-
 const allowedOrigins = ['https://delicate-quokka-3d0637.netlify.app']
-
 const credentials = (req, res, next) => {
   const origin = req.headers.origin
   if (allowedOrigins.includes(origin)) {
@@ -35,20 +31,16 @@ const credentials = (req, res, next) => {
   }
   next()
 }
-
 app.use(credentials)
-
 const corsOptions = {
   origin: allowedOrigins, 
   optionsSuccessStatus: 200,
 }
-
 app.use(cors(corsOptions))
 app.options('*', cors(corsOptions))
 
 app.post('/register', async (req, res) => {
   const {name, email, password} = req.body
-
   try{ 
     const userDoc = await User.create({
       name,
@@ -63,25 +55,17 @@ app.post('/register', async (req, res) => {
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  const userDoc = await User.findOne({ email });
-  
+  const userDoc = await User.findOne({ email })
   if (userDoc) {
-    const passOk = bcrypt.compareSync(password, userDoc.password)
+    const passOk = bcrypt.compareSync(password, userDoc.password);
     if (passOk) {
       jwt.sign({ email: userDoc.email, id: userDoc._id }, process.env.SECRET_KEY, { expiresIn: '1d' }, (err, token) => {
-        if (err) throw err
-        
-        const cookieOptions = {
-          httpOnly: true,
-          secure: true,
+        if (err) throw err;
+        res.cookie('token', token, { 
           sameSite: 'none',
-        };
-        
-        const tokenCookie = cookie.serialize('token', token, cookieOptions);
-        res.setHeader('Set-Cookie', tokenCookie);
-        
-        res.json({ user: userDoc, token: token });
-      })
+          secure: true,
+        }).json({ user: userDoc, token: token })
+      });
     } else {
       res.status(422).json('pass not ok')
     }
