@@ -43,6 +43,7 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 
 app.post('/register', async (req, res) => {
   const {name, email, password} = req.body
