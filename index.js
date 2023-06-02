@@ -18,7 +18,6 @@ require('dotenv').config()
 const bcryptSalt = bcrypt.genSaltSync(10)
 
 const allowedOrigins = [
-  'http://localhost:5173', 
   'https://delicate-quokka-3d0637.netlify.app'
 ]
 
@@ -75,7 +74,7 @@ app.post('/login', async (req, res) => {
     if (passOk) {
       jwt.sign({ email: userDoc.email, id: userDoc._id }, process.env.SECRET_KEY, { expiresIn: '1d' }, (err, token) => {
         if (err) throw err
-        res.cookie('token', token).json({ user: userDoc, token: token })
+        res.cookie('token', token, { sameSite: 'none', secure: true }).json({ user: userDoc, token: token })
       })
     } else {
       res.status(422).json('pass not ok')
