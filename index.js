@@ -91,7 +91,10 @@ app.post('/login', async (req, res) => {
 })
 
 app.get('/profile', (req, res) => {
-  const { token } = req.cookies
+  const authHeader = req.headers['authorization']
+  if (!authHeader) return res.sendStatus(401)
+  console.log(authHeader)
+  const token = authHeader.split(' ')[1]
   if (token) {
     jwt.verify(token, process.env.SECRET_KEY, async (err, cookieData) => {
       if (err) {
@@ -106,8 +109,26 @@ app.get('/profile', (req, res) => {
   }
 })
 
-app.post('/logout', (req, res) => {
-  res.cookie('token', '').json(true)
+app.post('/logout', async (req, res) => {
+  const refreshToken = req.cookies.refreshToken
+  if (!refreshToken) {
+    return res.sendStatus(401)
+  }
+  try {
+    const user = await User.findOneAndUpdate(
+      { refreshToken: refreshToken },
+      { $unset: { refreshToken: "" } }
+    )
+    if (user) {
+      res.clearCookie('token').clearCookie('refreshToken', { httpOnly: true, sameSite: 'None', secure: true })
+      return res.json(true)
+    } else {
+      return res.sendStatus(401)
+    }
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 })
 
 app.get('/get-accomodations-for-all-users', async (req, res) => {
