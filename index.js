@@ -19,7 +19,7 @@ const bcryptSalt = bcrypt.genSaltSync(10)
 app.use(cookieParser())
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
-app.use('/images', express.static(__dirname+'/images'))
+app.use('/images', express.static(__dirname + '/images'))
 
 mongoose.connect(process.env.MONGO_URL)
 
@@ -28,8 +28,9 @@ const allowedOrigins = ['https://delicate-quokka-3d0637.netlify.app']
 const credentials = (req, res, next) => {
   const origin = req.headers.origin
   if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Credentials', true)
     res.header('Access-Control-Allow-Origin', origin)
+    res.header('Access-Control-Allow-Credentials', true)
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
   }
   next()
 }
@@ -37,14 +38,8 @@ const credentials = (req, res, next) => {
 app.use(credentials)
 
 const corsOptions = {
-  origin: (origin, callback) => {
-    if(allowedOrigins.indexOf(origin !== -1 || !origin)){
-      callback(null, true)
-    }else{
-      callback(new Error('Not allowed by CORS'))
-    }
-  },
-  optionsSuccessStatus: 200
+  origin: allowedOrigins, 
+  optionsSuccessStatus: 200,
 }
 
 app.use(cors(corsOptions))
