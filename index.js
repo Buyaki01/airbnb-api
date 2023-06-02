@@ -17,14 +17,13 @@ require('dotenv').config()
 
 const bcryptSalt = bcrypt.genSaltSync(10)
 
-const allowedOrigins = [
-  'https://delicate-quokka-3d0637.netlify.app'
-]
+const allowedOrigins = ['https://delicate-quokka-3d0637.netlify.app']
 
 const credentials = (req, res, next) => {
   const origin = req.headers.origin
   if (allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Credentials', true)
+    res.header('Access-Control-Allow-Origin', origin)
   }
   next()
 }
