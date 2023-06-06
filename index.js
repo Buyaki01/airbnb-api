@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 app.use('/images', express.static(__dirname + '/images'))
 mongoose.connect(process.env.MONGO_URL)
-const allowedOrigins = ['https://delicate-quokka-3d0637.netlify.app']
+const allowedOrigins = ['http://localhost:5173']
 const credentials = (req, res, next) => {
   const origin = req.headers.origin
   if (allowedOrigins.includes(origin)) {
@@ -104,30 +104,20 @@ app.get('/accomodation/:id', async (req, res) => {
 })
 
 app.get('/bookings', async (req, res) => {
-  try {
-    const token = req.headers.authorization.split(' ')[1]
-    const decodedToken = jwt.verify(token, process.env.SECRET_KEY)
-    const userId = decodedToken.id
-    const bookings = await Booking.find({userId:userId}).populate('accomodationId')
-    res.status(200).json(bookings)
-  } catch (error) {
-    res.status(401).json({ message: 'Invalid token' })
-  }
+  const {token} = req.cookies
+  jwt.verify(token, process.env.SECRET_KEY, {}, async(err, cookieData) => {
+    const {id} = cookieData
+    res.json(await Booking.find({userId:id}).populate('accomodationId'))
+  })
 })
 
 app.get('/bookings/:id', async (req, res) => {
-  try {
-    const token = req.headers.authorization.split(' ')[1];
-    const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
-    const userId = decodedToken.id;
-    const booking = await Booking.findOne({ _id: req.params.id, userId: userId }).populate('accomodationId');
-    if (booking) {
-      res.status(200).json(booking);
-    } else {
-      res.status(404).json({ message: 'Booking not found' });
-    }
-  } catch (error) {
-    res.status(401).json({ message: 'Invalid token' });
+  const { token } = req.cookies
+  if (token) {
+    jwt.verify(token, process.env.SECRET_KEY, async (err, cookieData) => {
+      const booking = await Booking.findOne({ _id: req.params.id, userId: cookieData.id }).populate('accomodationId')
+      res.status(200).json(booking)
+    })
   }
 })
 
