@@ -1,14 +1,14 @@
 # airbnb-api
 
 ## Overview
-This is the backend of a Airbnb MERN (MongoDB, Express, React, Node.js) application that allows owners of accommodations/apartments to manage their listings. With this app, owners can easily add, edit, and delete details about their properties, making it easier for prospective clients to find and book their next vacation rental.
+This is the backend of an Airbnb MERN (MongoDB, Express, React, Node.js) application that allows owners of accommodations/apartments to manage their listings. With this app, owners can easily add, edit, and delete details about their properties, making it easier for prospective clients to find and book their next vacation rental.
 
 ## Features
-- **Add accommodations**: Has route to allow owner of accomodation to add their accomodation
-- **Edit accommodations**: Has route to allow owner of accomodation to edit their accomodation
-- **Show accommodations**: Has route to allow owner and users to see all accomodations entered by the owners of the accomodation
-- **Delete accommodations**: Has route to allow the owner to delete accomodation
-- **Book accommodations**: Has route to allow users to book accomodation
+- **Add accommodations**: Has route to allow the owner of accommodation to add their accommodation
+- **Edit accommodations**: Has route to allow the owner of accommodation to edit their accommodation
+- **Show accommodations**: Has route to allow owner and users to see all accommodations entered by the owners of the accommodation
+- **Delete accommodations**: Has route to allow the owner to delete accommodation
+- **Book accommodations**: Has route to allow users to book accommodation
 - **Show all accommodations booked by user**: Has route to allow users to see all their bookings
 
 ## Technologies Used
@@ -31,7 +31,7 @@ To get started with this app, follow these steps:
     cd airbnb-api
     ```
 
-3. Create a .env file with: MONGO_URL and the SECRET_KEY
+3. Create a .env file: Add MONGO_URL from the mongoDB, Add your ACCESS_TOKEN_SECRET and your REFRESH_TOKEN_SECRET
 
 4. Install dependencies using: 
     ```bash 
